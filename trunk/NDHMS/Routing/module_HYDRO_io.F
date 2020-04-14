@@ -10239,8 +10239,7 @@ end subroutine output_chrt2
 
     end subroutine nhdLakeMap
 
-#ifdef MPP_LAND
-    subroutine nhdLakeMap_mpp(NLAKES, NLINKSL, TYPEL, LAKELINKID, LAKEIDX, TO_NODE,LINKID, LAKEIDM, LAKEIDA,GNLINKSL)
+    subroutine nhdLaknhdLakeMap_mppeMap_mpp(NLAKES, NLINKSL, TYPEL, LAKELINKID, LAKEIDX, TO_NODE,LINKID, LAKEIDM, LAKEIDA,GNLINKSL)
         !--- get the lake configuration here.
         implicit none
         integer, dimension(:),   intent(out) :: TYPEL, LAKELINKID, LAKEIDX
@@ -10262,7 +10261,7 @@ end subroutine output_chrt2
       integer :: tmp_num, cache_block_begin, cache_block_end, cache_idx, cache_block
 
       tmpSize = size(TO_NODE,1)
-      allocate(OUTLAKEID(tmpSize))
+      allocate(OUTLAKEID(NLINKSL))
 
       allocate (gto(GNLINKSL))
 
@@ -10328,7 +10327,7 @@ end subroutine output_chrt2
       do cache_idx = 0, gnlinksl-1, cache_block
          cache_block_begin = cache_idx + 1
          cache_block_end = min(cache_idx + cache_block, gnlinksl)
-         do m = 1, NLINKSL
+         do m = 1, min(tmpSize, NLINKSL)
             tmp_num = num_a(m)
             do k = cache_block_begin, cache_block_end
                if(gto(k) .eq. LINKID(m) ) then
@@ -10365,7 +10364,7 @@ end subroutine output_chrt2
 !yw LAKELINKID = 0
       tmpLAKELINKID = LAKELINKID
       tmpOUTLAKEID  = tmpTO_NODE
-      OUTLAKEID(1:NLINKSL)  = TO_NODE(1:NLINKSL)
+      OUTLAKEID(1:min(tmpsize,NLINKSL)) = TO_NODE(1:min(tmpsize,NLINKSL))
 
  !! find the links that flow into lakes (e.g. TYPEL = 3), and update the TO_NODE, so that links flow into the lake reach
         DO i = 1, NLAKES
@@ -10422,7 +10421,7 @@ end subroutine output_chrt2
 !     end do
 
        call TONODE2RSL(ind,tmpTYPEL,size2,gNLINKSL,NLINKSL,TYPEL(1:NLINKSL), -999 )
-       call TONODE2RSL(ind,tmpOUTLAKEID,size2,gNLINKSL,NLINKSL,OUTLAKEID(1:NLINKSL), -999 )
+       call TONODE2RSL(ind,tmpOUTLAKEID,size2,gNLINKSL,min(tmpSize, NLINKSL),OUTLAKEID(1:min(tmpSize, NLINKSL)), -999)
 
 
  ! assign the the inflow nodes to the lank with a new TO_NODE id, which is the outflow link
@@ -10701,7 +10700,6 @@ end subroutine output_chrt2
       if(allocated(tmplakelinkid)) deallocate(tmplakelinkid)
 
     end subroutine nhdLakeMap_scan
-#endif
 
 !ADCHANGE: New output lake types routine
     subroutine output_lake_types( inNLINKS, inLINKID, inTYPEL )
